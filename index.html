@@ -111,7 +111,11 @@
             3: 'rgb(75, 192, 192)'
         };
 
-        var moduleNames = {};
+        var moduleNames = {
+            1: 'Simson',
+            2: 'WKS',
+            3: 'Kosiarka'
+        };
 
         var dataTypeFields = {
             'voltage': [1, 2, 3],
@@ -124,22 +128,6 @@
             'soc': '%',
             'temperature': '°C'
         };
-
-        function fetchChannelInfo() {
-            $.getJSON('https://api.thingspeak.com/channels/' + channelID + '/feeds.json?api_key=' + apiKey + '&results=0', function(data) {
-                var channelInfo = data.channel;
-                for (var i = 1; i <= 8; i++) {
-                    var fieldName = channelInfo['field' + i];
-                    if (fieldName) {
-                        var match = fieldName.match(/^(.*?)\s*\((Voltage|SoC|Temperature)\)$/);
-                        if (match) {
-                            moduleNames[i] = match[1];
-                        }
-                    }
-                }
-                fetchData();
-            });
-        }
 
         function fetchData() {
             var hours = $('#timeRange').val();
@@ -177,7 +165,7 @@
 
             for (var i = 1; i <= Object.keys(datasets).length; i++) {
                 chartData.datasets.push({
-                    label: moduleNames[dataTypeFields[dataType][i-1]] || ('Module ' + i),
+                    label: moduleNames[i] || ('Module ' + i),
                     data: datasets[i],
                     borderColor: colors[i],
                     backgroundColor: colors[i] + '33',
@@ -258,7 +246,7 @@
 
         $('#timeRange, #dataType').change(fetchData);
 
-        fetchChannelInfo();
+        fetchData();
 
         // Adjust chart size when window is resized
         $(window).resize(function() {
