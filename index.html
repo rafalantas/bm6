@@ -1,0 +1,260 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BM6 Module Data Visualization - Channel 2894310</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-annotation@2.0.0"></script>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.29.1/moment.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;700&display=swap" rel="stylesheet">
+    <style>
+        body { 
+            background: linear-gradient(135deg, #1e1e1e, #2a2a2a);
+            color: #ffffff;
+            font-family: 'Poppins', sans-serif;
+            margin: 0;
+            padding: 20px;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            width: 100%;
+            flex-grow: 1;
+            display: flex;
+            flex-direction: column;
+        }
+        .chart-container { 
+            background: rgba(42, 42, 42, 0.8);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+            margin-bottom: 30px;
+            padding: 20px;
+            transition: all 0.3s ease;
+            flex-grow: 1;
+            display: flex;
+            flex-direction: column;
+        }
+        .chart-container:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 12px 40px rgba(0, 0, 0, 0.4);
+        }
+        .controls {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 20px;
+        }
+        select {
+            background: rgba(58, 58, 58, 0.8);
+            border: none;
+            padding: 15px;
+            border-radius: 10px;
+            color: #ffffff;
+            font-size: 1rem;
+            width: 100%;
+            max-width: 200px;
+        }
+        canvas {
+            max-width: 100%;
+            height: auto !important;
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 10px;
+            }
+            .chart-container {
+                padding: 10px;
+            }
+            select {
+                font-size: 0.9rem;
+                padding: 10px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="controls">
+            <select id="dataType">
+                <option value="voltage">Voltage</option>
+                <option value="soc">State of Charge</option>
+                <option value="temperature">Temperature</option>
+            </select>
+            <select id="timeRange">
+                <option value="1">Last hour</option>
+                <option value="24" selected>Last day</option>
+                <option value="168">Last week</option>
+                <option value="720">Last month</option>
+                <option value="8760">Last year</option>
+            </select>
+        </div>
+        <div class="chart-container">
+            <canvas id="mainChart"></canvas>
+        </div>
+    </div>
+
+    <script>
+    $(document).ready(function() {
+        var channelID = '2894310';
+        var apiKey = '631YIXAOUQQCMCFK';
+        var chart;
+
+        var colors = {
+            1: 'rgb(255, 99, 132)',
+            2: 'rgb(54, 162, 235)',
+            3: 'rgb(75, 192, 192)'
+        };
+
+        var moduleNames = {
+            1: 'Module 1',
+            2: 'Module 2',
+            3: 'Module 3'
+        };
+
+        var dataTypeFields = {
+            'voltage': [1, 2, 3],
+            'soc': [4, 5, 6],
+            'temperature': [7, 8]
+        };
+
+        var dataTypeUnits = {
+            'voltage': 'V',
+            'soc': '%',
+            'temperature': '°C'
+        };
+
+        function fetchData() {
+            var hours = $('#timeRange').val();
+            var dataType = $('#dataType').val();
+            var results = hours * 4; // 15-minute intervals
+            
+            if (hours > 168) {
+                results = Math.min(results, 8000);
+            }
+
+            $.getJSON('https://api.thingspeak.com/channels/' + channelID + '/feeds.json?api_key=' + apiKey + '&results=' + results, function(data) {
+                var datasets = {};
+                var timestamps = [];
+
+                $.each(data.feeds, function(index, feed) {
+                    timestamps.push(moment(feed.created_at).format('DD.MM HH:mm'));
+                    dataTypeFields[dataType].forEach(function(field, i) {
+                        if (!datasets[i+1]) {
+                            datasets[i+1] = [];
+                        }
+                        var value = parseFloat(feed['field' + field]);
+                        datasets[i+1].push(isNaN(value) ? null : value);
+                    });
+                });
+
+                updateChart(timestamps, datasets, dataType);
+            });
+        }
+
+        function updateChart(timestamps, datasets, dataType) {
+            var chartData = {
+                labels: timestamps,
+                datasets: []
+            };
+
+            for (var i = 1; i <= Object.keys(datasets).length; i++) {
+                chartData.datasets.push({
+                    label: moduleNames[i],
+                    data: datasets[i],
+                    borderColor: colors[i],
+                    backgroundColor: colors[i] + '33',
+                    fill: false,
+                    tension: 0.4,
+                    pointRadius: 0,
+                    pointHoverRadius: 5,
+                    borderWidth: 2,
+                    spanGaps: true
+                });
+            }
+
+            if (chart) {
+                chart.destroy();
+            }
+
+            var ctx = document.getElementById('mainChart').getContext('2d');
+            chart = new Chart(ctx, {
+                type: 'line',
+                data: chartData,
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        title: {
+                            display: true,
+                            text: dataType.charAt(0).toUpperCase() + dataType.slice(1) + ' Data',
+                            font: { size: 18, weight: 'normal' },
+                            color: '#ffffff'
+                        },
+                        legend: { 
+                            display: true,
+                            labels: {
+                                color: '#ffffff'
+                            }
+                        },
+                        tooltip: {
+                            mode: 'index',
+                            intersect: false,
+                        }
+                    },
+                    scales: {
+                        x: {
+                            grid: {
+                                color: 'rgba(255, 255, 255, 0.1)'
+                            },
+                            ticks: {
+                                color: '#ffffff',
+                                maxTicksLimit: 6
+                            }
+                        },
+                        y: {
+                            grid: {
+                                color: 'rgba(255, 255, 255, 0.1)'
+                            },
+                            ticks: {
+                                color: '#ffffff'
+                            },
+                            title: {
+                                display: true,
+                                text: dataType.charAt(0).toUpperCase() + dataType.slice(1) + ' (' + dataTypeUnits[dataType] + ')',
+                                color: '#ffffff'
+                            }
+                        }
+                    },
+                    animation: {
+                        duration: 2000,
+                        easing: 'easeOutQuart'
+                    },
+                    elements: {
+                        line: {
+                            tension: 0.4
+                        }
+                    }
+                }
+            });
+        }
+
+        $('#timeRange, #dataType').change(fetchData);
+
+        fetchData();
+
+        // Adjust chart size when window is resized
+        $(window).resize(function() {
+            if (chart) {
+                chart.resize();
+            }
+        });
+    });
+    </script>
+</body>
+</html>
