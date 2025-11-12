@@ -84,7 +84,6 @@
             <select id="dataType">
                 <option value="voltage">Voltage</option>
                 <option value="soc">State of Charge</option>
-                <option value="temperature">Temperature</option>
             </select>
             <select id="timeRange">
                 <option value="1">Last hour</option>
@@ -108,25 +107,26 @@
         var colors = {
             1: 'rgb(255, 99, 132)',
             2: 'rgb(54, 162, 235)',
-            3: 'rgb(75, 192, 192)'
+            3: 'rgb(75, 192, 192)',
+            4: 'rgb(255, 205, 86)'
         };
 
         var moduleNames = {
             1: 'Simson',
             2: 'WKS',
-            3: 'Kosiarka'
+            3: 'Kosiarka',
+            4: 'MZ'
         };
 
+        // Zaktualizowane pola do voltage i soc (4 module)
         var dataTypeFields = {
-            'voltage': [1, 2, 3],
-            'soc': [4, 5, 6],
-            'temperature': [7, 8]
+            'voltage': [1, 2, 3, 10],   // field1, field2, field3, field10
+            'soc': [4, 5, 6, 11]        // field4, field5, field6, field11
         };
 
         var dataTypeUnits = {
             'voltage': 'V',
-            'soc': '%',
-            'temperature': '°C'
+            'soc': '%'
         };
 
         function fetchData() {
