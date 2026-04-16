@@ -42,31 +42,51 @@
         /* ── LIGHT ── */
         @media (prefers-color-scheme: light) {
             :root {
-                --bg: #f0ede8;
-                --panel: #faf9f7;
-                --panel2: #f0ede8;
-                --border: rgba(180,120,0,0.14);
-                --border-hover: rgba(180,120,0,0.35);
+                --bg: #f4f6f9;
+                --panel: #ffffff;
+                --panel2: #f4f6f9;
+                --border: rgba(0,0,0,0.08);
+                --border-hover: rgba(217,119,6,0.4);
                 --amber: #d97706;
-                --amber-dim: rgba(217,119,6,0.10);
-                --amber-glow: rgba(217,119,6,0.25);
+                --amber-dim: rgba(217,119,6,0.08);
+                --amber-glow: rgba(217,119,6,0.2);
                 --green: #059669;
-                --green-dim: rgba(5,150,105,0.12);
+                --green-dim: rgba(5,150,105,0.10);
                 --red: #dc2626;
-                --red-dim: rgba(220,38,38,0.10);
-                --text: #1c1917;
-                --muted: #78716c;
+                --red-dim: rgba(220,38,38,0.08);
+                --text: #111827;
+                --muted: #9ca3af;
                 --c1: #d97706;
                 --c2: #0284c7;
                 --c3: #7c3aed;
                 --c4: #059669;
                 --grid-line: rgba(0,0,0,0.05);
-                --tooltip-bg: #faf9f7;
-                --tooltip-body: #1c1917;
-                --chart-hover-border: #f0ede8;
-                --noise-opacity: 0.025;
-                --glow-bg: rgba(217,119,6,0.05);
-                --shadow: 0 4px 24px rgba(0,0,0,0.10);
+                --tooltip-bg: #ffffff;
+                --tooltip-body: #111827;
+                --chart-hover-border: #ffffff;
+                --noise-opacity: 0;
+                --glow-bg: rgba(217,119,6,0.06);
+                --shadow: 0 2px 12px rgba(0,0,0,0.07);
+            }
+
+            body {
+                background: #f4f6f9;
+            }
+
+            .card {
+                box-shadow: 0 1px 4px rgba(0,0,0,0.06), 0 0 0 1px rgba(0,0,0,0.06);
+            }
+
+            .chart-panel {
+                box-shadow: 0 1px 4px rgba(0,0,0,0.06), 0 0 0 1px rgba(0,0,0,0.06);
+            }
+
+            .btn-group, .type-toggle {
+                box-shadow: 0 1px 3px rgba(0,0,0,0.06);
+            }
+
+            .logo-icon {
+                box-shadow: 0 0 12px var(--amber-glow);
             }
         }
 
@@ -82,14 +102,19 @@
             transition: background 0.4s, color 0.4s;
         }
 
-        /* Noise overlay */
+        /* Noise overlay — only in dark mode, CSS opacity works correctly */
         body::before {
             content: '';
             position: fixed;
             inset: 0;
-            background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='var(--noise-opacity)'/%3E%3C/svg%3E");
+            background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+            opacity: 0.035;
             pointer-events: none;
             z-index: 0;
+        }
+
+        @media (prefers-color-scheme: light) {
+            body::before { display: none; }
         }
 
         /* Ambient glow top left */
