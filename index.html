@@ -10,11 +10,13 @@
     <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Barlow+Condensed:wght@300;400;600;700;800&family=Barlow:wght@300;400;500&display=swap" rel="stylesheet">
 
     <style>
+        /* ── DARK (default) ── */
         :root {
             --bg: #0a0c0f;
             --panel: #0f1318;
             --panel2: #141920;
             --border: rgba(255,165,0,0.12);
+            --border-hover: rgba(255,165,0,0.3);
             --amber: #f59e0b;
             --amber-dim: rgba(245,158,11,0.15);
             --amber-glow: rgba(245,158,11,0.4);
@@ -28,6 +30,44 @@
             --c2: #38bdf8;
             --c3: #a78bfa;
             --c4: #34d399;
+            --grid-line: rgba(255,255,255,0.04);
+            --tooltip-bg: #141920;
+            --tooltip-body: #e2e8f0;
+            --chart-hover-border: #0a0c0f;
+            --noise-opacity: 0.04;
+            --glow-bg: rgba(245,158,11,0.06);
+            --shadow: 0 4px 24px rgba(0,0,0,0.4);
+        }
+
+        /* ── LIGHT ── */
+        @media (prefers-color-scheme: light) {
+            :root {
+                --bg: #f0ede8;
+                --panel: #faf9f7;
+                --panel2: #f0ede8;
+                --border: rgba(180,120,0,0.14);
+                --border-hover: rgba(180,120,0,0.35);
+                --amber: #d97706;
+                --amber-dim: rgba(217,119,6,0.10);
+                --amber-glow: rgba(217,119,6,0.25);
+                --green: #059669;
+                --green-dim: rgba(5,150,105,0.12);
+                --red: #dc2626;
+                --red-dim: rgba(220,38,38,0.10);
+                --text: #1c1917;
+                --muted: #78716c;
+                --c1: #d97706;
+                --c2: #0284c7;
+                --c3: #7c3aed;
+                --c4: #059669;
+                --grid-line: rgba(0,0,0,0.05);
+                --tooltip-bg: #faf9f7;
+                --tooltip-body: #1c1917;
+                --chart-hover-border: #f0ede8;
+                --noise-opacity: 0.025;
+                --glow-bg: rgba(217,119,6,0.05);
+                --shadow: 0 4px 24px rgba(0,0,0,0.10);
+            }
         }
 
         * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -39,6 +79,7 @@
             min-height: 100vh;
             padding: 24px;
             overflow-x: hidden;
+            transition: background 0.4s, color 0.4s;
         }
 
         /* Noise overlay */
@@ -46,7 +87,7 @@
             content: '';
             position: fixed;
             inset: 0;
-            background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.04'/%3E%3C/svg%3E");
+            background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='var(--noise-opacity)'/%3E%3C/svg%3E");
             pointer-events: none;
             z-index: 0;
         }
@@ -59,7 +100,7 @@
             left: -200px;
             width: 600px;
             height: 600px;
-            background: radial-gradient(circle, rgba(245,158,11,0.06) 0%, transparent 70%);
+            background: radial-gradient(circle, var(--glow-bg) 0%, transparent 70%);
             pointer-events: none;
             z-index: 0;
         }
@@ -79,6 +120,7 @@
             margin-bottom: 32px;
             padding-bottom: 20px;
             border-bottom: 1px solid var(--border);
+            transition: border-color 0.4s;
         }
 
         .logo-area {
@@ -169,7 +211,7 @@
             padding: 20px;
             position: relative;
             overflow: hidden;
-            transition: border-color 0.3s, transform 0.3s;
+            transition: border-color 0.3s, transform 0.3s, background 0.4s, box-shadow 0.3s;
             cursor: default;
         }
 
@@ -183,8 +225,9 @@
         }
 
         .card:hover {
-            border-color: rgba(255,165,0,0.3);
+            border-color: var(--border-hover);
             transform: translateY(-2px);
+            box-shadow: var(--shadow);
         }
 
         .card[data-module="1"] { --accent-color: var(--c1); }
@@ -335,6 +378,7 @@
             border: 1px solid var(--border);
             border-radius: 10px;
             overflow: hidden;
+            transition: background 0.4s, border-color 0.4s;
         }
 
         .btn-group button {
@@ -372,6 +416,7 @@
             border: 1px solid var(--border);
             border-radius: 10px;
             overflow: hidden;
+            transition: background 0.4s, border-color 0.4s;
         }
 
         .type-toggle button {
@@ -403,9 +448,18 @@
             border-radius: 16px;
             padding: 28px 28px 20px;
             position: relative;
+            transition: background 0.4s, border-color 0.4s;
         }
 
-        .chart-header {
+        header {
+            display: flex;
+            align-items: flex-end;
+            justify-content: space-between;
+            margin-bottom: 32px;
+            padding-bottom: 20px;
+            border-bottom: 1px solid var(--border);
+            transition: border-color 0.4s;
+        }
             display: flex;
             align-items: center;
             justify-content: space-between;
@@ -457,11 +511,10 @@
             height: 380px;
         }
 
-        /* Loading spinner overlay */
         .loading-overlay {
             position: absolute;
             inset: 0;
-            background: rgba(10,12,15,0.7);
+            background: rgba(var(--bg-rgb, 10,12,15), 0.7);
             display: flex;
             align-items: center;
             justify-content: center;
@@ -470,6 +523,7 @@
             opacity: 0;
             pointer-events: none;
             transition: opacity 0.3s;
+            backdrop-filter: blur(2px);
         }
 
         .loading-overlay.show {
@@ -673,7 +727,6 @@ let chart;
 let currentType = 'voltage';
 let currentHours = 24;
 
-const colors = ['#f59e0b', '#38bdf8', '#a78bfa', '#34d399'];
 const moduleNames = ['Simson', 'WSK', 'Kosiarka', 'MZ'];
 
 const dataTypeFields = {
@@ -756,6 +809,15 @@ function fetchData() {
     });
 }
 
+// --- Theme helpers ---
+function getCSSVar(name) {
+    return getComputedStyle(document.documentElement).getPropertyValue(name).trim();
+}
+
+function isLight() {
+    return window.matchMedia('(prefers-color-scheme: light)').matches;
+}
+
 // --- Render Chart ---
 function renderChart(labels, datasets) {
     const unit = currentType === 'voltage' ? 'V' : '%';
@@ -768,11 +830,26 @@ function renderChart(labels, datasets) {
 
     const ctx = document.getElementById('mainChart').getContext('2d');
 
+    const tooltipBg   = getCSSVar('--tooltip-bg');
+    const tooltipBody = getCSSVar('--tooltip-body');
+    const amberColor  = getCSSVar('--amber');
+    const gridColor   = getCSSVar('--grid-line');
+    const mutedColor  = getCSSVar('--muted');
+    const hoverBorder = getCSSVar('--chart-hover-border');
+
+    // Live colors (may differ dark vs light)
+    const liveColors = [
+        getCSSVar('--c1'),
+        getCSSVar('--c2'),
+        getCSSVar('--c3'),
+        getCSSVar('--c4'),
+    ];
+
     // Build gradient fills
     const chartDatasets = datasets.map((data, i) => {
-        const color = colors[i];
+        const color = liveColors[i];
         const grad = ctx.createLinearGradient(0, 0, 0, 380);
-        grad.addColorStop(0, color + '33');
+        grad.addColorStop(0, color + (isLight() ? '28' : '33'));
         grad.addColorStop(1, color + '00');
         return {
             label: moduleNames[i],
@@ -784,7 +861,7 @@ function renderChart(labels, datasets) {
             pointRadius: 0,
             pointHoverRadius: 6,
             pointHoverBackgroundColor: color,
-            pointHoverBorderColor: '#0a0c0f',
+            pointHoverBorderColor: hoverBorder,
             pointHoverBorderWidth: 2,
             borderWidth: 2,
             spanGaps: true
@@ -801,11 +878,11 @@ function renderChart(labels, datasets) {
             plugins: {
                 legend: { display: false },
                 tooltip: {
-                    backgroundColor: '#141920',
-                    borderColor: 'rgba(245,158,11,0.3)',
+                    backgroundColor: tooltipBg,
+                    borderColor: amberColor + '55',
                     borderWidth: 1,
-                    titleColor: '#f59e0b',
-                    bodyColor: '#e2e8f0',
+                    titleColor: amberColor,
+                    bodyColor: tooltipBody,
                     titleFont: { family: 'Share Tech Mono', size: 11 },
                     bodyFont: { family: 'Share Tech Mono', size: 12 },
                     padding: 14,
@@ -816,18 +893,18 @@ function renderChart(labels, datasets) {
             },
             scales: {
                 x: {
-                    grid: { color: 'rgba(255,255,255,0.04)', drawBorder: false },
+                    grid: { color: gridColor, drawBorder: false },
                     ticks: {
-                        color: '#4a5568',
+                        color: mutedColor,
                         maxTicksLimit: 8,
                         font: { family: 'Share Tech Mono', size: 10 }
                     },
                     border: { display: false }
                 },
                 y: {
-                    grid: { color: 'rgba(255,255,255,0.04)', drawBorder: false },
+                    grid: { color: gridColor, drawBorder: false },
                     ticks: {
-                        color: '#4a5568',
+                        color: mutedColor,
                         font: { family: 'Share Tech Mono', size: 10 },
                         callback: v => v + unit
                     },
@@ -838,6 +915,16 @@ function renderChart(labels, datasets) {
         }
     });
 }
+
+// Re-render chart when system theme changes
+window.matchMedia('(prefers-color-scheme: light)').addEventListener('change', () => {
+    if (chart) {
+        // Grab current chart data and re-render with new theme colors
+        const labels = chart.data.labels;
+        const datasets = chart.data.datasets.map(ds => ds.data);
+        renderChart(labels, datasets);
+    }
+});
 
 // --- Controls ---
 document.querySelectorAll('.type-toggle button').forEach(btn => {
