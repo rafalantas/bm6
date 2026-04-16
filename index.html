@@ -3,258 +3,865 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>BM6 Module Data Visualization - Channel 2894310</title>
+    <title>BM6 Battery Monitor</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-annotation@2.0.0"></script>
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.29.1/moment.min.js"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Barlow+Condensed:wght@300;400;600;700;800&family=Barlow:wght@300;400;500&display=swap" rel="stylesheet">
+
     <style>
-        body { 
-            background: linear-gradient(135deg, #1e1e1e, #2a2a2a);
-            color: #ffffff;
-            font-family: 'Poppins', sans-serif;
-            margin: 0;
-            padding: 20px;
-            min-height: 100vh;
-            display: flex;
-            flex-direction: column;
-        }
-        .container {
-            max-width: 1400px;
-            margin: 0 auto;
-            width: 100%;
-            flex-grow: 1;
-            display: flex;
-            flex-direction: column;
-        }
-        .chart-container { 
-            background: rgba(42, 42, 42, 0.8);
-            backdrop-filter: blur(10px);
-            border-radius: 20px;
-            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
-            margin-bottom: 30px;
-            padding: 20px;
-            transition: all 0.3s ease;
-            flex-grow: 1;
-            display: flex;
-            flex-direction: column;
-        }
-        .chart-container:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 12px 40px rgba(0, 0, 0, 0.4);
-        }
-        .controls {
-            display: flex;
-            justify-content: space-between;
-            margin-bottom: 20px;
-        }
-        select {
-            background: rgba(58, 58, 58, 0.8);
-            border: none;
-            padding: 15px;
-            border-radius: 10px;
-            color: #ffffff;
-            font-size: 1rem;
-            width: 100%;
-            max-width: 200px;
-        }
-        canvas {
-            max-width: 100%;
-            height: auto !important;
+        :root {
+            --bg: #0a0c0f;
+            --panel: #0f1318;
+            --panel2: #141920;
+            --border: rgba(255,165,0,0.12);
+            --amber: #f59e0b;
+            --amber-dim: rgba(245,158,11,0.15);
+            --amber-glow: rgba(245,158,11,0.4);
+            --green: #22d3a5;
+            --green-dim: rgba(34,211,165,0.15);
+            --red: #ef4444;
+            --red-dim: rgba(239,68,68,0.15);
+            --text: #e2e8f0;
+            --muted: #4a5568;
+            --c1: #f59e0b;
+            --c2: #38bdf8;
+            --c3: #a78bfa;
+            --c4: #34d399;
         }
 
-        @media (max-width: 768px) {
-            body {
-                padding: 10px;
-            }
-            .chart-container {
-                padding: 10px;
-            }
-            select {
-                font-size: 0.9rem;
-                padding: 10px;
-            }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            background: var(--bg);
+            color: var(--text);
+            font-family: 'Barlow', sans-serif;
+            min-height: 100vh;
+            padding: 24px;
+            overflow-x: hidden;
+        }
+
+        /* Noise overlay */
+        body::before {
+            content: '';
+            position: fixed;
+            inset: 0;
+            background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.04'/%3E%3C/svg%3E");
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        /* Ambient glow top left */
+        body::after {
+            content: '';
+            position: fixed;
+            top: -200px;
+            left: -200px;
+            width: 600px;
+            height: 600px;
+            background: radial-gradient(circle, rgba(245,158,11,0.06) 0%, transparent 70%);
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        .container {
+            max-width: 1440px;
+            margin: 0 auto;
+            position: relative;
+            z-index: 1;
+        }
+
+        /* HEADER */
+        header {
+            display: flex;
+            align-items: flex-end;
+            justify-content: space-between;
+            margin-bottom: 32px;
+            padding-bottom: 20px;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .logo-area {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .logo-icon {
+            width: 48px;
+            height: 48px;
+            background: var(--amber-dim);
+            border: 1px solid var(--amber);
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 22px;
+            box-shadow: 0 0 20px var(--amber-glow);
+        }
+
+        .logo-text h1 {
+            font-family: 'Barlow Condensed', sans-serif;
+            font-size: 28px;
+            font-weight: 800;
+            letter-spacing: 4px;
+            text-transform: uppercase;
+            color: var(--amber);
+            line-height: 1;
+        }
+
+        .logo-text p {
+            font-size: 11px;
+            color: var(--muted);
+            letter-spacing: 3px;
+            text-transform: uppercase;
+            font-family: 'Share Tech Mono', monospace;
+            margin-top: 4px;
+        }
+
+        .status-bar {
+            display: flex;
+            align-items: center;
+            gap: 24px;
+        }
+
+        .status-dot {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 12px;
+            font-family: 'Share Tech Mono', monospace;
+            color: var(--muted);
+        }
+
+        .dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: var(--green);
+            box-shadow: 0 0 8px var(--green);
+            animation: pulse-dot 2s infinite;
+        }
+
+        @keyframes pulse-dot {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.4; }
+        }
+
+        .timestamp {
+            font-family: 'Share Tech Mono', monospace;
+            font-size: 12px;
+            color: var(--muted);
+        }
+
+        /* MODULE CARDS */
+        .cards-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 16px;
+            margin-bottom: 28px;
+        }
+
+        .card {
+            background: var(--panel);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            padding: 20px;
+            position: relative;
+            overflow: hidden;
+            transition: border-color 0.3s, transform 0.3s;
+            cursor: default;
+        }
+
+        .card::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; right: 0;
+            height: 3px;
+            background: var(--accent-color);
+            opacity: 0.8;
+        }
+
+        .card:hover {
+            border-color: rgba(255,165,0,0.3);
+            transform: translateY(-2px);
+        }
+
+        .card[data-module="1"] { --accent-color: var(--c1); }
+        .card[data-module="2"] { --accent-color: var(--c2); }
+        .card[data-module="3"] { --accent-color: var(--c3); }
+        .card[data-module="4"] { --accent-color: var(--c4); }
+
+        .card-label {
+            font-family: 'Barlow Condensed', sans-serif;
+            font-size: 11px;
+            letter-spacing: 3px;
+            text-transform: uppercase;
+            color: var(--muted);
+            margin-bottom: 12px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .card-label::before {
+            content: '';
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: var(--accent-color);
+            box-shadow: 0 0 6px var(--accent-color);
+            flex-shrink: 0;
+        }
+
+        .card-name {
+            font-family: 'Barlow Condensed', sans-serif;
+            font-size: 22px;
+            font-weight: 700;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            color: var(--text);
+            margin-bottom: 20px;
+        }
+
+        .card-metrics {
+            display: flex;
+            gap: 16px;
+        }
+
+        .metric {
+            flex: 1;
+        }
+
+        .metric-val {
+            font-family: 'Share Tech Mono', monospace;
+            font-size: 24px;
+            font-weight: normal;
+            color: var(--accent-color);
+            line-height: 1;
+            text-shadow: 0 0 20px var(--accent-color);
+        }
+
+        .metric-val.loading {
+            color: var(--muted);
+            animation: blink 1.2s infinite;
+            text-shadow: none;
+        }
+
+        @keyframes blink {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.3; }
+        }
+
+        .metric-unit {
+            font-size: 11px;
+            color: var(--muted);
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            margin-top: 4px;
+            font-family: 'Share Tech Mono', monospace;
+        }
+
+        /* SOC BAR */
+        .soc-bar-wrap {
+            margin-top: 16px;
+        }
+
+        .soc-bar-track {
+            height: 4px;
+            background: rgba(255,255,255,0.06);
+            border-radius: 2px;
+            overflow: hidden;
+        }
+
+        .soc-bar-fill {
+            height: 100%;
+            background: var(--accent-color);
+            border-radius: 2px;
+            transition: width 1s ease;
+            box-shadow: 0 0 8px var(--accent-color);
+            width: 0%;
+        }
+
+        /* STATUS BADGE */
+        .status-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 10px;
+            font-family: 'Share Tech Mono', monospace;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+            padding: 4px 10px;
+            border-radius: 20px;
+            margin-top: 12px;
+            background: var(--green-dim);
+            color: var(--green);
+            border: 1px solid rgba(34,211,165,0.3);
+        }
+
+        .status-badge.warn {
+            background: var(--amber-dim);
+            color: var(--amber);
+            border-color: rgba(245,158,11,0.3);
+        }
+
+        .status-badge.danger {
+            background: var(--red-dim);
+            color: var(--red);
+            border-color: rgba(239,68,68,0.3);
+        }
+
+        /* CONTROLS */
+        .controls-bar {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+
+        .controls-bar label {
+            font-size: 11px;
+            font-family: 'Barlow Condensed', sans-serif;
+            letter-spacing: 3px;
+            text-transform: uppercase;
+            color: var(--muted);
+        }
+
+        .btn-group {
+            display: flex;
+            background: var(--panel);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            overflow: hidden;
+        }
+
+        .btn-group button {
+            background: none;
+            border: none;
+            color: var(--muted);
+            padding: 10px 18px;
+            font-family: 'Barlow Condensed', sans-serif;
+            font-size: 13px;
+            font-weight: 600;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            cursor: pointer;
+            transition: all 0.2s;
+            border-right: 1px solid var(--border);
+        }
+
+        .btn-group button:last-child { border-right: none; }
+
+        .btn-group button:hover {
+            color: var(--text);
+            background: rgba(255,255,255,0.04);
+        }
+
+        .btn-group button.active {
+            color: var(--amber);
+            background: var(--amber-dim);
+        }
+
+        .spacer { flex: 1; }
+
+        .type-toggle {
+            display: flex;
+            background: var(--panel);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            overflow: hidden;
+        }
+
+        .type-toggle button {
+            background: none;
+            border: none;
+            color: var(--muted);
+            padding: 10px 22px;
+            font-family: 'Barlow Condensed', sans-serif;
+            font-size: 13px;
+            font-weight: 600;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            cursor: pointer;
+            transition: all 0.2s;
+            border-right: 1px solid var(--border);
+        }
+
+        .type-toggle button:last-child { border-right: none; }
+        .type-toggle button:hover { color: var(--text); }
+        .type-toggle button.active {
+            color: var(--amber);
+            background: var(--amber-dim);
+        }
+
+        /* CHART PANEL */
+        .chart-panel {
+            background: var(--panel);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            padding: 28px 28px 20px;
+            position: relative;
+        }
+
+        .chart-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 24px;
+        }
+
+        .chart-title {
+            font-family: 'Barlow Condensed', sans-serif;
+            font-size: 18px;
+            font-weight: 700;
+            letter-spacing: 3px;
+            text-transform: uppercase;
+            color: var(--text);
+        }
+
+        .chart-subtitle {
+            font-size: 12px;
+            color: var(--muted);
+            font-family: 'Share Tech Mono', monospace;
+            margin-top: 2px;
+        }
+
+        .legend {
+            display: flex;
+            gap: 20px;
+            flex-wrap: wrap;
+        }
+
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 12px;
+            font-family: 'Barlow Condensed', sans-serif;
+            font-weight: 600;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            color: var(--muted);
+        }
+
+        .legend-dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+        }
+
+        .chart-wrap {
+            position: relative;
+            height: 380px;
+        }
+
+        /* Loading spinner overlay */
+        .loading-overlay {
+            position: absolute;
+            inset: 0;
+            background: rgba(10,12,15,0.7);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 12px;
+            z-index: 10;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.3s;
+        }
+
+        .loading-overlay.show {
+            opacity: 1;
+            pointer-events: all;
+        }
+
+        .spinner {
+            width: 40px;
+            height: 40px;
+            border: 2px solid var(--border);
+            border-top-color: var(--amber);
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        /* Footer */
+        footer {
+            margin-top: 24px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding-top: 16px;
+            border-top: 1px solid var(--border);
+        }
+
+        footer span {
+            font-size: 11px;
+            font-family: 'Share Tech Mono', monospace;
+            color: var(--muted);
+            letter-spacing: 1px;
+        }
+
+        /* RESPONSIVE */
+        @media (max-width: 900px) {
+            .cards-grid { grid-template-columns: repeat(2, 1fr); }
+        }
+
+        @media (max-width: 560px) {
+            body { padding: 12px; }
+            .cards-grid { grid-template-columns: 1fr 1fr; gap: 10px; }
+            header { flex-direction: column; align-items: flex-start; gap: 12px; }
+            .chart-header { flex-direction: column; align-items: flex-start; gap: 12px; }
+            .chart-wrap { height: 260px; }
+            .btn-group button { padding: 8px 12px; font-size: 11px; }
+            .type-toggle button { padding: 8px 14px; font-size: 11px; }
         }
     </style>
 </head>
 <body>
-    <div class="container">
-        <div class="controls">
-            <select id="dataType">
-                <option value="voltage">Voltage</option>
-                <option value="soc">State of Charge</option>
-            </select>
-            <select id="timeRange">
-                <option value="1">Last hour</option>
-                <option value="24" selected>Last day</option>
-                <option value="168">Last week</option>
-                <option value="720">Last month</option>
-                <option value="8760">Last year</option>
-            </select>
+<div class="container">
+
+    <!-- HEADER -->
+    <header>
+        <div class="logo-area">
+            <div class="logo-icon">⚡</div>
+            <div class="logo-text">
+                <h1>BM6 Monitor</h1>
+                <p>Channel 2894310 · ThingSpeak</p>
+            </div>
         </div>
-        <div class="chart-container">
-            <canvas id="mainChart"></canvas>
+        <div class="status-bar">
+            <div class="status-dot">
+                <div class="dot"></div>
+                <span>LIVE</span>
+            </div>
+            <div class="timestamp" id="lastUpdate">--:--:--</div>
+        </div>
+    </header>
+
+    <!-- MODULE CARDS -->
+    <div class="cards-grid" id="cardsGrid">
+        <div class="card" data-module="1">
+            <div class="card-label">Module 01</div>
+            <div class="card-name">Simson</div>
+            <div class="card-metrics">
+                <div class="metric">
+                    <div class="metric-val loading" id="v1">---</div>
+                    <div class="metric-unit">Voltage V</div>
+                </div>
+                <div class="metric">
+                    <div class="metric-val loading" id="s1">---</div>
+                    <div class="metric-unit">SoC %</div>
+                </div>
+            </div>
+            <div class="soc-bar-wrap">
+                <div class="soc-bar-track"><div class="soc-bar-fill" id="bar1"></div></div>
+            </div>
+            <div class="status-badge" id="badge1">● OK</div>
+        </div>
+        <div class="card" data-module="2">
+            <div class="card-label">Module 02</div>
+            <div class="card-name">WSK</div>
+            <div class="card-metrics">
+                <div class="metric">
+                    <div class="metric-val loading" id="v2">---</div>
+                    <div class="metric-unit">Voltage V</div>
+                </div>
+                <div class="metric">
+                    <div class="metric-val loading" id="s2">---</div>
+                    <div class="metric-unit">SoC %</div>
+                </div>
+            </div>
+            <div class="soc-bar-wrap">
+                <div class="soc-bar-track"><div class="soc-bar-fill" id="bar2"></div></div>
+            </div>
+            <div class="status-badge" id="badge2">● OK</div>
+        </div>
+        <div class="card" data-module="3">
+            <div class="card-label">Module 03</div>
+            <div class="card-name">Kosiarka</div>
+            <div class="card-metrics">
+                <div class="metric">
+                    <div class="metric-val loading" id="v3">---</div>
+                    <div class="metric-unit">Voltage V</div>
+                </div>
+                <div class="metric">
+                    <div class="metric-val loading" id="s3">---</div>
+                    <div class="metric-unit">SoC %</div>
+                </div>
+            </div>
+            <div class="soc-bar-wrap">
+                <div class="soc-bar-track"><div class="soc-bar-fill" id="bar3"></div></div>
+            </div>
+            <div class="status-badge" id="badge3">● OK</div>
+        </div>
+        <div class="card" data-module="4">
+            <div class="card-label">Module 04</div>
+            <div class="card-name">MZ</div>
+            <div class="card-metrics">
+                <div class="metric">
+                    <div class="metric-val loading" id="v4">---</div>
+                    <div class="metric-unit">Voltage V</div>
+                </div>
+                <div class="metric">
+                    <div class="metric-val loading" id="s4">---</div>
+                    <div class="metric-unit">SoC %</div>
+                </div>
+            </div>
+            <div class="soc-bar-wrap">
+                <div class="soc-bar-track"><div class="soc-bar-fill" id="bar4"></div></div>
+            </div>
+            <div class="status-badge" id="badge4">● OK</div>
         </div>
     </div>
 
-    <script>
-    $(document).ready(function() {
-        var channelID = '2894310';
-        var apiKey = '631YIXAOUQQCMCFK';
-        var chart;
+    <!-- CONTROLS -->
+    <div class="controls-bar">
+        <div class="type-toggle">
+            <button class="active" data-type="voltage">Voltage</button>
+            <button data-type="soc">State of Charge</button>
+        </div>
+        <div class="spacer"></div>
+        <label>Range</label>
+        <div class="btn-group">
+            <button data-hours="1">1H</button>
+            <button data-hours="24" class="active">24H</button>
+            <button data-hours="168">7D</button>
+            <button data-hours="720">30D</button>
+            <button data-hours="8760">1Y</button>
+        </div>
+    </div>
 
-        var colors = {
-            1: 'rgb(255, 99, 132)',
-            2: 'rgb(54, 162, 235)',
-            3: 'rgb(75, 192, 192)',
-            4: 'rgb(255, 205, 86)'
-        };
+    <!-- CHART -->
+    <div class="chart-panel">
+        <div class="chart-header">
+            <div>
+                <div class="chart-title" id="chartTitle">Voltage History</div>
+                <div class="chart-subtitle" id="chartSubtitle">Last 24 hours · 15-min intervals</div>
+            </div>
+            <div class="legend">
+                <div class="legend-item"><div class="legend-dot" style="background:var(--c1)"></div>Simson</div>
+                <div class="legend-item"><div class="legend-dot" style="background:var(--c2)"></div>WSK</div>
+                <div class="legend-item"><div class="legend-dot" style="background:var(--c3)"></div>Kosiarka</div>
+                <div class="legend-item"><div class="legend-dot" style="background:var(--c4)"></div>MZ</div>
+            </div>
+        </div>
+        <div class="chart-wrap">
+            <canvas id="mainChart"></canvas>
+            <div class="loading-overlay" id="loadingOverlay">
+                <div class="spinner"></div>
+            </div>
+        </div>
+    </div>
 
-        var moduleNames = {
-            1: 'Simson',
-            2: 'WSK',
-            3: 'Kosiarka',
-            4: 'MZ'
-        };
+    <footer>
+        <span>BM6 BATTERY MONITOR DASHBOARD</span>
+        <span id="footerData">Fetching data…</span>
+    </footer>
 
-        // Zaktualizowane pola do voltage i soc (4 module)
-        var dataTypeFields = {
-            'voltage': [1, 2, 3, 4],   // field1, field2, field3, field10
-            'soc': [5, 6, 7, 8]        // field4, field5, field6, field11
-        };
+</div>
 
-        var dataTypeUnits = {
-            'voltage': 'V',
-            'soc': '%'
-        };
+<script>
+const channelID = '2894310';
+const apiKey = '631YIXAOUQQCMCFK';
+let chart;
+let currentType = 'voltage';
+let currentHours = 24;
 
-        function fetchData() {
-            var hours = $('#timeRange').val();
-            var dataType = $('#dataType').val();
-            var results = hours * 4; // 15-minute intervals
-            
-            if (hours > 168) {
-                results = Math.min(results, 8000);
+const colors = ['#f59e0b', '#38bdf8', '#a78bfa', '#34d399'];
+const moduleNames = ['Simson', 'WSK', 'Kosiarka', 'MZ'];
+
+const dataTypeFields = {
+    voltage: [1, 2, 3, 4],
+    soc: [5, 6, 7, 8]
+};
+
+const rangeLabels = {
+    1: 'Last hour',
+    24: 'Last 24 hours · 15-min intervals',
+    168: 'Last 7 days',
+    720: 'Last 30 days',
+    8760: 'Last year'
+};
+
+// --- Fetch latest values for cards ---
+function fetchLatest() {
+    $.getJSON(`https://api.thingspeak.com/channels/${channelID}/feeds/last.json?api_key=${apiKey}`, function(feed) {
+        if (!feed) return;
+        for (let i = 1; i <= 4; i++) {
+            const v = parseFloat(feed['field' + i]);
+            const s = parseFloat(feed['field' + (i + 4)]);
+
+            const vEl = document.getElementById('v' + i);
+            const sEl = document.getElementById('s' + i);
+            const barEl = document.getElementById('bar' + i);
+            const badgeEl = document.getElementById('badge' + i);
+
+            if (!isNaN(v)) {
+                vEl.textContent = v.toFixed(2);
+                vEl.classList.remove('loading');
             }
+            if (!isNaN(s)) {
+                sEl.textContent = s.toFixed(0);
+                sEl.classList.remove('loading');
+                barEl.style.width = Math.min(100, Math.max(0, s)) + '%';
 
-            $.getJSON('https://api.thingspeak.com/channels/' + channelID + '/feeds.json?api_key=' + apiKey + '&results=' + results, function(data) {
-                var datasets = {};
-                var timestamps = [];
-
-                $.each(data.feeds, function(index, feed) {
-                    timestamps.push(moment(feed.created_at).format('DD.MM HH:mm'));
-                    dataTypeFields[dataType].forEach(function(field, i) {
-                        if (!datasets[i+1]) {
-                            datasets[i+1] = [];
-                        }
-                        var value = parseFloat(feed['field' + field]);
-                        datasets[i+1].push(isNaN(value) ? null : value);
-                    });
-                });
-
-                updateChart(timestamps, datasets, dataType);
-            });
+                // Status badge
+                badgeEl.className = 'status-badge';
+                if (s >= 60) {
+                    badgeEl.textContent = '● OK';
+                } else if (s >= 25) {
+                    badgeEl.className = 'status-badge warn';
+                    badgeEl.textContent = '● LOW';
+                } else {
+                    badgeEl.className = 'status-badge danger';
+                    badgeEl.textContent = '● CRITICAL';
+                }
+            }
         }
 
-        function updateChart(timestamps, datasets, dataType) {
-            var chartData = {
-                labels: timestamps,
-                datasets: []
-            };
+        document.getElementById('lastUpdate').textContent =
+            moment(feed.created_at).format('DD.MM.YYYY HH:mm:ss');
+    });
+}
 
-            for (var i = 1; i <= Object.keys(datasets).length; i++) {
-                chartData.datasets.push({
-                    label: moduleNames[i] || ('Module ' + i),
-                    data: datasets[i],
-                    borderColor: colors[i],
-                    backgroundColor: colors[i] + '33',
-                    fill: false,
-                    tension: 0.4,
-                    pointRadius: 0,
-                    pointHoverRadius: 5,
-                    borderWidth: 2,
-                    spanGaps: true
-                });
-            }
+// --- Fetch chart data ---
+function fetchData() {
+    document.getElementById('loadingOverlay').classList.add('show');
+    const results = Math.min(currentHours * 4, 8000);
 
-            if (chart) {
-                chart.destroy();
-            }
+    $.getJSON(`https://api.thingspeak.com/channels/${channelID}/feeds.json?api_key=${apiKey}&results=${results}`, function(data) {
+        const labels = [];
+        const datasets = [[], [], [], []];
 
-            var ctx = document.getElementById('mainChart').getContext('2d');
-            chart = new Chart(ctx, {
-                type: 'line',
-                data: chartData,
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    plugins: {
-                        title: {
-                            display: true,
-                            text: dataType.charAt(0).toUpperCase() + dataType.slice(1) + ' Data',
-                            font: { size: 18, weight: 'normal' },
-                            color: '#ffffff'
-                        },
-                        legend: { 
-                            display: true,
-                            labels: {
-                                color: '#ffffff'
-                            }
-                        },
-                        tooltip: {
-                            mode: 'index',
-                            intersect: false,
-                        }
-                    },
-                    scales: {
-                        x: {
-                            grid: {
-                                color: 'rgba(255, 255, 255, 0.1)'
-                            },
-                            ticks: {
-                                color: '#ffffff',
-                                maxTicksLimit: 6
-                            }
-                        },
-                        y: {
-                            grid: {
-                                color: 'rgba(255, 255, 255, 0.1)'
-                            },
-                            ticks: {
-                                color: '#ffffff'
-                            },
-                            title: {
-                                display: true,
-                                text: dataType.charAt(0).toUpperCase() + dataType.slice(1) + ' (' + dataTypeUnits[dataType] + ')',
-                                color: '#ffffff'
-                            }
-                        }
-                    },
-                    animation: {
-                        duration: 2000,
-                        easing: 'easeOutQuart'
-                    },
-                    elements: {
-                        line: {
-                            tension: 0.4
-                        }
+        $.each(data.feeds, function(_, feed) {
+            labels.push(moment(feed.created_at).format('DD.MM HH:mm'));
+            dataTypeFields[currentType].forEach(function(field, i) {
+                const val = parseFloat(feed['field' + field]);
+                datasets[i].push(isNaN(val) ? null : val);
+            });
+        });
+
+        renderChart(labels, datasets);
+        document.getElementById('footerData').textContent =
+            `${data.feeds.length} data points · Channel ${channelID}`;
+        document.getElementById('loadingOverlay').classList.remove('show');
+    }).fail(function() {
+        document.getElementById('loadingOverlay').classList.remove('show');
+    });
+}
+
+// --- Render Chart ---
+function renderChart(labels, datasets) {
+    const unit = currentType === 'voltage' ? 'V' : '%';
+    const titleText = currentType === 'voltage' ? 'Voltage History' : 'State of Charge History';
+
+    document.getElementById('chartTitle').textContent = titleText;
+    document.getElementById('chartSubtitle').textContent = rangeLabels[currentHours];
+
+    if (chart) chart.destroy();
+
+    const ctx = document.getElementById('mainChart').getContext('2d');
+
+    // Build gradient fills
+    const chartDatasets = datasets.map((data, i) => {
+        const color = colors[i];
+        const grad = ctx.createLinearGradient(0, 0, 0, 380);
+        grad.addColorStop(0, color + '33');
+        grad.addColorStop(1, color + '00');
+        return {
+            label: moduleNames[i],
+            data,
+            borderColor: color,
+            backgroundColor: grad,
+            fill: true,
+            tension: 0.4,
+            pointRadius: 0,
+            pointHoverRadius: 6,
+            pointHoverBackgroundColor: color,
+            pointHoverBorderColor: '#0a0c0f',
+            pointHoverBorderWidth: 2,
+            borderWidth: 2,
+            spanGaps: true
+        };
+    });
+
+    chart = new Chart(ctx, {
+        type: 'line',
+        data: { labels, datasets: chartDatasets },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            interaction: { mode: 'index', intersect: false },
+            plugins: {
+                legend: { display: false },
+                tooltip: {
+                    backgroundColor: '#141920',
+                    borderColor: 'rgba(245,158,11,0.3)',
+                    borderWidth: 1,
+                    titleColor: '#f59e0b',
+                    bodyColor: '#e2e8f0',
+                    titleFont: { family: 'Share Tech Mono', size: 11 },
+                    bodyFont: { family: 'Share Tech Mono', size: 12 },
+                    padding: 14,
+                    callbacks: {
+                        label: (ctx) => `  ${ctx.dataset.label}: ${ctx.parsed.y !== null ? ctx.parsed.y.toFixed(2) + unit : 'N/A'}`
                     }
                 }
-            });
+            },
+            scales: {
+                x: {
+                    grid: { color: 'rgba(255,255,255,0.04)', drawBorder: false },
+                    ticks: {
+                        color: '#4a5568',
+                        maxTicksLimit: 8,
+                        font: { family: 'Share Tech Mono', size: 10 }
+                    },
+                    border: { display: false }
+                },
+                y: {
+                    grid: { color: 'rgba(255,255,255,0.04)', drawBorder: false },
+                    ticks: {
+                        color: '#4a5568',
+                        font: { family: 'Share Tech Mono', size: 10 },
+                        callback: v => v + unit
+                    },
+                    border: { display: false }
+                }
+            },
+            animation: { duration: 800, easing: 'easeOutQuart' }
         }
-
-        $('#timeRange, #dataType').change(fetchData);
-
-        fetchData();
-
-        // Adjust chart size when window is resized
-        $(window).resize(function() {
-            if (chart) {
-                chart.resize();
-            }
-        });
     });
-    </script>
+}
+
+// --- Controls ---
+document.querySelectorAll('.type-toggle button').forEach(btn => {
+    btn.addEventListener('click', function() {
+        document.querySelectorAll('.type-toggle button').forEach(b => b.classList.remove('active'));
+        this.classList.add('active');
+        currentType = this.dataset.type;
+        fetchData();
+    });
+});
+
+document.querySelectorAll('.btn-group button').forEach(btn => {
+    btn.addEventListener('click', function() {
+        document.querySelectorAll('.btn-group button').forEach(b => b.classList.remove('active'));
+        this.classList.add('active');
+        currentHours = parseInt(this.dataset.hours);
+        fetchData();
+    });
+});
+
+// --- Init ---
+fetchLatest();
+fetchData();
+setInterval(fetchLatest, 60000); // refresh cards every minute
+</script>
 </body>
 </html>
