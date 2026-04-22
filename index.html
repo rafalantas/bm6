@@ -931,7 +931,8 @@ function renderChart(labels, datasets) {
                     ticks: {
                         color: mutedColor,
                         font: { family: 'Share Tech Mono', size: 10 },
-                        callback: v => v + unit
+                        maxTicksLimit: 6,
+                        callback: v => parseFloat(v.toFixed(2)) + unit
                     },
                     border: { display: false }
                 }
