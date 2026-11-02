@@ -210,6 +210,17 @@
             animation: pulse-dot 2s infinite;
         }
 
+        .dot.stale {
+            background: var(--amber);
+            box-shadow: 0 0 8px var(--amber);
+        }
+
+        .dot.offline {
+            background: var(--red);
+            box-shadow: 0 0 8px var(--red);
+            animation: none;
+        }
+
         @keyframes pulse-dot {
             0%, 100% { opacity: 1; }
             50% { opacity: 0.4; }
@@ -616,8 +627,8 @@
         </div>
         <div class="status-bar">
             <div class="status-dot">
-                <div class="dot"></div>
-                <span>LIVE</span>
+                <div class="dot" id="connectionDot"></div>
+                <span id="connectionStatus" role="status" aria-live="polite">CONNECTING</span>
             </div>
             <div class="timestamp" id="lastUpdate">--:--:--</div>
         </div>
@@ -751,6 +762,8 @@ const apiKey = '631YIXAOUQQCMCFK';
 let chart;
 let currentType = 'voltage';
 let currentHours = 24;
+let lastSuccessfulFetch = null;
+let chartRequestId = 0;
 
 const moduleNames = ['Simson', 'WSK', 'Kosiarka', 'MZ'];
 
@@ -767,10 +780,27 @@ const rangeLabels = {
     8760: 'Last year'
 };
 
+function markDataReceived() {
+    lastSuccessfulFetch = Date.now();
+    updateConnectionStatus();
+}
+
+function updateConnectionStatus() {
+    const statusEl = document.getElementById('connectionStatus');
+    const dotEl = document.getElementById('connectionDot');
+    const age = lastSuccessfulFetch === null ? Infinity : Date.now() - lastSuccessfulFetch;
+    const state = age < 120000 ? 'LIVE' : age < 300000 ? 'STALE' : lastSuccessfulFetch === null ? 'CONNECTING' : 'OFFLINE';
+
+    statusEl.textContent = state;
+    dotEl.classList.toggle('stale', state === 'STALE');
+    dotEl.classList.toggle('offline', state === 'OFFLINE');
+}
+
 // --- Fetch latest values for cards ---
 function fetchLatest() {
     $.getJSON(`https://api.thingspeak.com/channels/${channelID}/feeds/last.json?api_key=${apiKey}`, function(feed) {
         if (!feed) return;
+        markDataReceived();
         for (let i = 1; i <= 4; i++) {
             const v = parseFloat(feed['field' + i]);
             const s = parseFloat(feed['field' + (i + 4)]);
@@ -810,16 +840,25 @@ function fetchLatest() {
 
 // --- Fetch chart data ---
 function fetchData() {
+    const requestId = ++chartRequestId;
+    const requestedType = currentType;
     document.getElementById('loadingOverlay').classList.add('show');
     const results = Math.min(currentHours * 4, 8000);
 
     $.getJSON(`https://api.thingspeak.com/channels/${channelID}/feeds.json?api_key=${apiKey}&results=${results}`, function(data) {
+        if (requestId !== chartRequestId) return;
+        if (!data || !Array.isArray(data.feeds)) {
+            document.getElementById('loadingOverlay').classList.remove('show');
+            document.getElementById('footerData').textContent = 'No chart data available';
+            return;
+        }
+        markDataReceived();
         const labels = [];
         const datasets = [[], [], [], []];
 
         $.each(data.feeds, function(_, feed) {
             labels.push(moment(feed.created_at).format('DD.MM HH:mm'));
-            dataTypeFields[currentType].forEach(function(field, i) {
+            dataTypeFields[requestedType].forEach(function(field, i) {
                 const val = parseFloat(feed['field' + field]);
                 datasets[i].push(isNaN(val) ? null : val);
             });
@@ -830,7 +869,9 @@ function fetchData() {
             `${data.feeds.length} data points · Channel ${channelID}`;
         document.getElementById('loadingOverlay').classList.remove('show');
     }).fail(function() {
+        if (requestId !== chartRequestId) return;
         document.getElementById('loadingOverlay').classList.remove('show');
+        document.getElementById('footerData').textContent = 'Unable to load chart data';
     });
 }
 
@@ -975,6 +1016,8 @@ document.querySelectorAll('.btn-group button').forEach(btn => {
 fetchLatest();
 fetchData();
 setInterval(fetchLatest, 60000); // refresh cards every minute
+setInterval(fetchData, 60000); // keep the chart current without a manual refresh
+setInterval(updateConnectionStatus, 15000);
 </script>
 </body>
 </html>
