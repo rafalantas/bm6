@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+<style>
+.tile{fill:#10151b;stroke:#374151}.battery{fill:none;stroke:#f59e0b}.cap{fill:#f59e0b}
+.b1{fill:#f59e0b}.b2{fill:#38bdf8}.b3{fill:#a78bfa}.b4{fill:#34d399}
+.signal{fill:none;stroke:#f59e0b}
+@media(prefers-color-scheme:light){.tile{fill:#f4f6f9;stroke:#cbd5e1}.battery{stroke:#b45309}.cap{fill:#b45309}.signal{stroke:#b45309}}
+</style>
+<rect class="tile" x="2" y="2" width="60" height="60" rx="15" stroke-width="1.5"/>
+<path class="signal" d="M24 15a11 11 0 0 1 16 0M28 19a5.5 5.5 0 0 1 8 0" stroke-width="3" stroke-linecap="round"/>
+<rect class="battery" x="10" y="27" width="43" height="23" rx="5" stroke-width="3"/>
+<rect class="cap" x="53" y="34" width="4" height="9" rx="1.5"/>
+<rect class="b1" x="15" y="32" width="7" height="13" rx="1.5"/><rect class="b2" x="24" y="32" width="7" height="13" rx="1.5"/>
+<rect class="b3" x="33" y="32" width="7" height="13" rx="1.5"/><rect class="b4" x="42" y="32" width="6" height="13" rx="1.5"/>
+</svg>
