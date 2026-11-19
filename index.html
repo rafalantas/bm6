@@ -3,7 +3,30 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>BM6 Battery Monitor</title>
+    <title>BM6 Monitor — Battery Dashboard</title>
+<meta name="description" content="BM6 Battery Monitor — dashboard for four battery modules. Monitor voltage, state of charge and historical trends for Simson, WSK, Kosiarka and MZ.">
+<meta name="application-name" content="BM6 Monitor">
+<meta name="theme-color" content="#0a0c0f" media="(prefers-color-scheme: dark)">
+<meta name="theme-color" content="#f4f6f9" media="(prefers-color-scheme: light)">
+<link rel="icon" type="image/svg+xml" href="/favicon.svg?v=2">
+<link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
+<link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
+<link rel="manifest" href="/site.webmanifest">
+<link rel="canonical" href="https://bm6.rafalonthe.net/">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="BM6 Battery Monitor">
+<meta property="og:title" content="BM6 Monitor — 4-channel Battery Dashboard">
+<meta property="og:description" content="Voltage, state of charge and history for four battery modules: Simson, WSK, Kosiarka and MZ.">
+<meta property="og:url" content="https://bm6.rafalonthe.net/">
+<meta property="og:image" content="https://bm6.rafalonthe.net/og-image.svg">
+<meta property="og:image:type" content="image/svg+xml">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:image:alt" content="BM6 Monitor four-channel battery dashboard preview">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="BM6 Monitor — Battery Dashboard">
+<meta name="twitter:description" content="Voltage, state of charge and history for four battery modules.">
+<meta name="twitter:image" content="https://bm6.rafalonthe.net/og-image.svg">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.29.1/moment.min.js"></script>
@@ -619,7 +642,13 @@
     <!-- HEADER -->
     <header>
         <div class="logo-area">
-            <div class="logo-icon">⚡</div>
+            <div class="logo-icon" aria-hidden="true">
+<svg viewBox="0 0 64 64" width="32" height="32">
+<path d="M24 15a11 11 0 0 1 16 0M28 19a5.5 5.5 0 0 1 8 0" fill="none" stroke="var(--amber)" stroke-width="3" stroke-linecap="round"/>
+<rect x="10" y="27" width="43" height="23" rx="5" fill="none" stroke="var(--amber)" stroke-width="3"/>
+<rect x="53" y="34" width="4" height="9" rx="1.5" fill="var(--amber)"/>
+<rect x="15" y="32" width="7" height="13" rx="1.5" fill="var(--c1)"/><rect x="24" y="32" width="7" height="13" rx="1.5" fill="var(--c2)"/><rect x="33" y="32" width="7" height="13" rx="1.5" fill="var(--c3)"/><rect x="42" y="32" width="6" height="13" rx="1.5" fill="var(--c4)"/>
+</svg></div>
             <div class="logo-text">
                 <h1>BM6 Monitor</h1>
                 <p>Channel 2894310 · ThingSpeak</p>
