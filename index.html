@@ -796,9 +796,12 @@ let chartRequestId = 0;
 
 const moduleNames = ['Simson', 'WSK', 'Kosiarka', 'MZ'];
 
+// ThingSpeak field mapping in BM6 app order: Simson, WSK, Kosiarka, MZ.
+// Channel 3590528: F1 Simson V, F2 WSK V, F3 MZ V, F4 Kosiarka V,
+// F5 Simson SoC, F6 MZ SoC, F7 Kosiarka SoC, F8 WSK SoC.
 const dataTypeFields = {
-    voltage: [1, 2, 3, 4],
-    soc: [5, 6, 7, 8]
+    voltage: [1, 2, 4, 3],
+    soc: [5, 8, 7, 6]
 };
 
 const rangeLabels = {
@@ -831,8 +834,10 @@ function fetchLatest() {
         if (!feed) return;
         markDataReceived();
         for (let i = 1; i <= 4; i++) {
-            const v = parseFloat(feed['field' + i]);
-            const s = parseFloat(feed['field' + (i + 4)]);
+            const voltageField = dataTypeFields.voltage[i - 1];
+            const socField = dataTypeFields.soc[i - 1];
+            const v = parseFloat(feed['field' + voltageField]);
+            const s = parseFloat(feed['field' + socField]);
 
             const vEl = document.getElementById('v' + i);
             const sEl = document.getElementById('s' + i);
