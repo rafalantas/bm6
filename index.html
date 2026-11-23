@@ -797,11 +797,12 @@ let chartRequestId = 0;
 const moduleNames = ['Simson', 'WSK', 'Kosiarka', 'MZ'];
 
 // ThingSpeak field mapping in BM6 app order: Simson, WSK, Kosiarka, MZ.
-// Channel 3590528: F1 Simson V, F2 WSK V, F3 MZ V, F4 Kosiarka V,
-// F5 Simson SoC, F6 MZ SoC, F7 Kosiarka SoC, F8 WSK SoC.
+// Voltage: F1 Simson, F2 WSK, F3 MZ, F4 Kosiarka.
+// Actual SoC feed values: F5 Simson, F6 WSK, F7 Kosiarka, F8 MZ.
+// Note: ThingSpeak field labels for F6/F8 do not currently match their payloads.
 const dataTypeFields = {
     voltage: [1, 2, 4, 3],
-    soc: [5, 8, 7, 6]
+    soc: [5, 6, 7, 8]
 };
 
 const rangeLabels = {
