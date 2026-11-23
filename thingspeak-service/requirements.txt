@@ -1,3 +1,4 @@
-aiohttp
-bleak
-pycryptodome
+# Versions verified in the Raspberry Pi production environment (Python 3.11.2).
+aiohttp==3.11.16
+bleak==0.22.3
+pycryptodome==3.22.0
