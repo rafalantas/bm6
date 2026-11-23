@@ -37,10 +37,10 @@ def notify_systemd(message):
         logging.warning("systemd notification failed: %s", exc)
 
 def decrypt(crypted):
-    return AES.new(KEY, AES.MODE_CBC, 16 * b'\\0').decrypt(crypted).hex()
+    return AES.new(KEY, AES.MODE_CBC, 16 * b'\x00').decrypt(crypted).hex()
 
 def encrypt(plaintext):
-    return AES.new(KEY, AES.MODE_CBC, 16 * b'\\0').encrypt(plaintext)
+    return AES.new(KEY, AES.MODE_CBC, 16 * b'\x00').encrypt(plaintext)
 
 async def is_device_in_range(address):
     try:
@@ -135,17 +135,17 @@ async def sleep_with_watchdog(duration):
 
 async def main():
     logging.info("BM6 -> ThingSpeak service started (interval: %s sec)", INTERVAL_SECONDS)
-    notify_systemd("READY=1\\nSTATUS=BM6 service ready")
+    notify_systemd("READY=1\nSTATUS=BM6 service ready")
     while True:
         try:
             cycle_timeout = (SCAN_TIMEOUT + BLE_TIMEOUT + 1) * len(BM6_ADDRESSES) + HTTP_TIMEOUT + 10
-            notify_systemd("WATCHDOG=1\\nSTATUS=Starting BM6 readout")
+            notify_systemd("WATCHDOG=1\nSTATUS=Starting BM6 readout")
             await asyncio.wait_for(collect_and_send_data(), timeout=cycle_timeout)
         except asyncio.TimeoutError:
             logging.error("Full cycle exceeded time limit, waiting for next run")
         except Exception as exc:
             logging.error("Unexpected error in main loop: %s", exc)
-        notify_systemd("WATCHDOG=1\\nSTATUS=Readout finished; waiting for next interval")
+        notify_systemd("WATCHDOG=1\nSTATUS=Readout finished; waiting for next interval")
         await sleep_with_watchdog(INTERVAL_SECONDS)
 
 if __name__ == "__main__":
